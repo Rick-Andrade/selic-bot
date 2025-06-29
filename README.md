@@ -58,7 +58,7 @@ After=network.target
 Type=oneshot
 User=pi
 WorkingDirectory=/home/pi/selicBot
-ExecStart=/home/pi/selicBot/venv/bin/python /home/pi/selicBot/ai_flow/selic_bot_agent.py
+ExecStart=/home/pi/selicBot/venv/bin/python /home/pi/selicBot/selic_bot_main.py
 Environment=PYTHONUNBUFFERED=1
 Restart=on-failure
 
