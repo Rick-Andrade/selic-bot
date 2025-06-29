@@ -1,10 +1,11 @@
-from openai import OpenAI
-from ai_flow.agent_base import AgentBase
-from ai_flow.prompt_paths import SELIC_PROMPT
 import json
 import os
 import pdfplumber
 import requests
+from openai import OpenAI
+from ai_flow.agent_base import AgentBase
+from ai_flow.prompt_paths import SELIC_PROMPT
+
 
 class SelicAgent(AgentBase):
     def __init__(self, api_key: str, model: str = "gpt-4", prompt_path: str = SELIC_PROMPT):
@@ -21,10 +22,10 @@ class SelicAgent(AgentBase):
     def generate(self) -> str:
         if self.report_text == "":
             return "No Copom report available for analysis."
-        
         messages = [
             {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": "Analise o relatório mais recente do Copom e comente as tendências da taxa Selic."}
+            {"role": "user", "content": "Analise o relatório mais recente do Copom e comente "
+             "as tendências da taxa Selic."}
         ]
         response = self.client.chat.completions.create(
             model=self.model,
@@ -52,7 +53,7 @@ class SelicAgent(AgentBase):
 
         history_file = "last_minute_read.json"
         if os.path.exists(history_file):
-            with open(history_file, "r") as f:
+            with open(history_file, "r", encoding="utf-8") as f:
                 last_minute_read = json.load(f).get("last_minute_read", 0)
         else:
             last_minute_read = 0
@@ -66,21 +67,21 @@ class SelicAgent(AgentBase):
             url = f"https://www.bcb.gov.br/content/copom/atascopom/{file_name}"
 
             print(f"🔗 Trying to download: {url}")
-            response = requests.get(url)
+            response = requests.get(url, timeout=60)
             if response.status_code == 200:
                 local_pdf_path = f"ata_copom_{number}.pdf"
                 with open(local_pdf_path, "wb") as f:
                     f.write(response.content)
                 print(f"📥 Success! Report {number} downloaded from: {url}")
 
-                with open(history_file, "w") as f:
+                with open(history_file, "w", encoding="utf-8") as f:
                     json.dump({"last_minute_read": number}, f)
 
                 return self._extract_text_from_pdf(local_pdf_path)
 
         print("✅ No new minutes found. All available minutes have already been read.")
         return ""
-    
+
     def _extract_text_from_pdf(self, path: str) -> str:
         text = ""
         with pdfplumber.open(path) as pdf:
