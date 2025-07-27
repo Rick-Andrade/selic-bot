@@ -88,6 +88,45 @@ sudo systemctl enable selicbot.timer
 sudo systemctl start selicbot.timer
 ```
 
+## 🕒 Running SelicBot Automatically on BusyBox Init
+
+To run the SelicBot script once per day automatically, a custom init script is created inside `/etc/init.d/` and is executed during startup.
+You implemented the script using a persistent background loop (while true) with a sleep 86400, ensuring the bot runs every 24 hours.
+
+### ✅ 1. Create the startup script
+
+```bash
+vi /etc/init.d/S90_start_selicbot.sh
+```
+Paste the following content:
+
+```bash
+#!/bin/sh
+
+(
+  while true; do
+    echo "$(date) - Starting SelicBot" >> /var/log/selicbot.log
+    cd /opt/selicBot
+    . venv/bin/activate
+    python selic_bot_main.py >> /var/log/selicbot.log 2>&1
+    sleep 86400
+  done
+) &
+```
+
+### ✅ 2. Make the script executable
+
+```bash
+chmod +x /etc/init.d/S90_start_selicbot.sh
+```
+
+### ✅ 3. Behavior
+
+- This script is executed during boot by the default BusyBox init sequence (/etc/init.d/rcS).
+- It runs in the background and executes selic_bot_main.py every 24 hours.
+- All logs are written to: /var/log/selicbot.log.
+- To check logs run command `tail -f /var/log/selicbot.log`
+
 ## 💬 Example Output
 
 ```txt

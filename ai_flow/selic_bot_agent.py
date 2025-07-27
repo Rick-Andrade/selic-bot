@@ -3,7 +3,7 @@ from ai_flow.agent_base import AgentBase
 from ai_flow.prompt_paths import SELIC_PROMPT
 import json
 import os
-import pdfplumber
+from PyPDF2 import PdfReader
 import requests
 
 class SelicAgent(AgentBase):
@@ -35,7 +35,7 @@ class SelicAgent(AgentBase):
         return content.strip() if content else ""
 
     def _download_and_extract_copom_report(self) -> str:
-        print("📎 Looking for the latest valid report based on a map of known dates...")
+        print("Looking for the latest valid report based on a map of known dates...")
 
         minutes = {
             275: "20251210",
@@ -59,31 +59,35 @@ class SelicAgent(AgentBase):
 
         for number, data in sorted(minutes.items(), reverse=True):
             if number <= last_minute_read:
-                print(f"ℹ️ Minute {number} has already been read previously. Skipping.")
+                print(f"Minute {number} has already been read previously. Skipping.")
                 continue
 
             file_name = f"Copom{number}-not{data}{number}.pdf"
             url = f"https://www.bcb.gov.br/content/copom/atascopom/{file_name}"
 
-            print(f"🔗 Trying to download: {url}")
+            print(f"Trying to download: {url}")
             response = requests.get(url)
             if response.status_code == 200:
                 local_pdf_path = f"ata_copom_{number}.pdf"
                 with open(local_pdf_path, "wb") as f:
                     f.write(response.content)
-                print(f"📥 Success! Report {number} downloaded from: {url}")
+                print(f"Success! Report {number} downloaded from: {url}")
 
                 with open(history_file, "w") as f:
                     json.dump({"last_minute_read": number}, f)
 
                 return self._extract_text_from_pdf(local_pdf_path)
 
-        print("✅ No new minutes found. All available minutes have already been read.")
+        print("No new minutes found. All available minutes have already been read.")
         return ""
     
     def _extract_text_from_pdf(self, path: str) -> str:
         text = ""
-        with pdfplumber.open(path) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
-        return text.strip()
+        try:
+            reader = PdfReader(path)
+            for page in reader.pages:
+                text += page.extract_text() or ""
+            return text.strip()
+        except Exception as exception:
+            print(f"Error extracting text from PDF with PyPDF2: {exception}")
+            return ""
