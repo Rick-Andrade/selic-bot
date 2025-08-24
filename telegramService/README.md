@@ -69,6 +69,6 @@ curl https://api.telegram.org/bot<TELEGRAM_TOKEN>/getUpdates
 
 Update the file called .env in the project root:
 ```env
-TELEGRAM_TOKEN=8068384007:AAGLrr-lRDA3akE4EXWggDICRkMZrMCXY7o
-TELEGRAM_CHAT_ID=-4825770858
+TELEGRAM_TOKEN=123456789:ABCdefGhIJKlmNoPQRstuVWXyz1234567890
+TELEGRAM_CHAT_ID=-1234567890
 ```
